@@ -2,7 +2,11 @@ my $dir-sep        := $*SPEC.dir-sep;
 my $setting-source := $*EXECUTABLE.parent(3).absolute ~ $dir-sep;
 my %repo-paths;
 
-my sub backtrace-files(
+my proto sub backtrace-files(|) is export {*}
+my multi sub backtrace-files(IO::Path:D $io, *%_) {
+    backtrace-files($io.slurp, |%_)
+}
+my multi sub backtrace-files(
   Str:D $backtrace,
   Bool :$source,
   Int  :$context        = 0,

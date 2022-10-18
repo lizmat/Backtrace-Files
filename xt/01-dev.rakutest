@@ -97,50 +97,59 @@ is-deeply backtrace-files($C), (
     => array[int].new(140, 1)
 ), 'did extended backtrace parse ok';
 
-is-deeply backtrace-files($D, :source), (
+# Normalize backtraces into easiliy comparable values
+my sub normalize(@result) {
+    @result.map: -> (:key($filename), :value(@lines)) {
+        Pair.new:
+          $filename,
+          @lines.map({ Pair.new: .key, "Line $_.key()" }).List
+    }
+}
+
+is-deeply normalize(backtrace-files($D, :source)), (
   "/Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30"
-    => ( 841 => "             my \$result := matcher(\$item.value);",
-          28 => "    \$seq.iterator.push-all(my \$buffer := IterationBuffer.new);",
-        1268 => "            Pair.new: \$*SOURCE, eagerSlip producer(\$*SOURCE).map: runner"
+    => ( 841 => "Line 841",
+          28 => "Line 28",
+        1268 => "Line 1268"
        ),
   "/Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod"
-    => ( 743 => "    RESULT:",
-         627 => "    \$output-dir ?? output-dir-results() !! show-results();",
-        2702 => "    rak-results;",
-         413 => "    \$action-for ?? ::(\"\&action-\$action-for\")() !! action-per-line();"
+    => ( 743 => "Line 743",
+         627 => "Line 627",
+        2702 => "Line 2702",
+         413 => "Line 413"
        ),
   "bin/rak"
-    => (3 => "",)
+    => (3 => "Line 3",)
 ), 'did backtrace with source parse ok';
 
-is-deeply backtrace-files($D, :source, :context(1)), (
+is-deeply normalize(backtrace-files($D, :source, :context(1))), (
   "/Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30"
-    => ( 840 => "      ?? -> \$item \{",
-         841 => "             my \$result := matcher(\$item.value);",
-         842 => "             not-acceptable(\$result)",
-          27 => "my sub eagerSlip(\$seq) \{",
-          28 => "    \$seq.iterator.push-all(my \$buffer := IterationBuffer.new);",
-          29 => "    \$buffer.Slip",
-        1267 => "            ++⚛\$nr-sources;",
-        1268 => "            Pair.new: \$*SOURCE, eagerSlip producer(\$*SOURCE).map: runner",
-        1269 => "        }"
+    => ( 840 => "Line 840",
+         841 => "Line 841",
+         842 => "Line 842",
+          27 => "Line 27",
+          28 => "Line 28",
+          29 => "Line 29",
+        1267 => "Line 1267",
+        1268 => "Line 1268",
+        1269 => "Line 1269"
        ),
   "/Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod"
-    => ( 742 => "    my int \$seen;",
-         743 => "    RESULT:",
-         744 => "    for \$rak.result -> \$outer \{",
-         626 => "my sub rak-results(--> Nil) \{",
-         627 => "    \$output-dir ?? output-dir-results() !! show-results();",
-         628 => "}",
-        2701 => "    run-rak;",
-        2702 => "    rak-results;",
-        2703 => "    rak-stats;",
-         412 => "    # Perform the actual action",
-         413 => "    \$action-for ?? ::(\"\&action-\$action-for\")() !! action-per-line();",
-         414 => "    \$*OUT.close if \$pager;"
+    => ( 742 => "Line 742",
+         743 => "Line 743",
+         744 => "Line 744",
+         626 => "Line 626",
+         627 => "Line 627",
+         628 => "Line 628",
+        2701 => "Line 2701",
+        2702 => "Line 2702",
+        2703 => "Line 2703",
+         412 => "Line 412",
+         413 => "Line 413",
+         414 => "Line 414"
        ),
   "bin/rak"
-    => (3 => "",)
+    => (3 => "Line 3",)
 ), 'did backtrace with source and context parse ok';
 
 # vim: expandtab shiftwidth=4
