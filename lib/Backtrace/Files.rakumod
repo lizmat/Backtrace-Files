@@ -1,8 +1,12 @@
+# some global variables
 my $dir-sep        := $*SPEC.dir-sep;
 my $setting-source := $*EXECUTABLE.parent(3).absolute ~ $dir-sep;
 my %repo-paths;
 
 my proto sub backtrace-files(|) is export {*}
+my multi sub backtrace-files(IO::Handle:D $handle, *%_) {
+    backtrace-files($handle.slurp(:close), |%_)
+}
 my multi sub backtrace-files(IO::Path:D $io, *%_) {
     backtrace-files($io.slurp, |%_)
 }
@@ -16,10 +20,12 @@ my multi sub backtrace-files(
   Pair :$added-context,
 --> Seq:D) is export {
 
+    # some record keeping vars
     my str $lastfile = "";
     my int @lines;
     my @file-lines;
 
+    # logic to add a frame from a backtrace to the result
     my sub add(str $string, Int() $linenr) {
         my $filename = $string
           .subst(/^ \w+ '#' /, {
@@ -44,6 +50,7 @@ my multi sub backtrace-files(
         }
     }
 
+    # Determine the file / line numbers
     for $backtrace.lines {
         my $line := .subst('SETTING::',$setting-source);
 
@@ -74,6 +81,7 @@ my multi sub backtrace-files(
               !! (%path-lines{$filename} := try $filename.IO.lines)
         }
 
+        # need context
         if $before-context || $after-context {
             @file-lines.map: -> (:key($filename), :value(@linenrs)) {
                 my $context-lines := IterationBuffer.CREATE;
@@ -100,6 +108,8 @@ my multi sub backtrace-files(
                 }
             }
         }
+
+        # no context needed
         else {
             @file-lines.map: {
                 my $filename := .key;
@@ -112,6 +122,8 @@ my multi sub backtrace-files(
             }
         }
     }
+
+    # don't want the actual source, just the line numbers
     else {
         @file-lines.Seq
     }
@@ -160,6 +172,10 @@ for backtrace-files($backtrace, :source) -> (:key($file), :value(@lines)) {
 }
 
 =end code
+
+The C<backtrace-files> subroutine accepts a single positional argument,
+the source of the backtrace information.  This can either be an
+C<IO::Handle> object, an C<IO::Path> object, or a string.
 
 By default, the C<backtrace-files> subroutine produces a list of C<Pair>s
 of which the key is the absolute filename, and the value is a list of
