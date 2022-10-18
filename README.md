@@ -41,6 +41,8 @@ for backtrace-files($backtrace, :source) -> (:key($file), :value(@lines)) {
 }
 ```
 
+The `backtrace-files` subroutine accepts a single positional argument, the source of the backtrace information. This can either be an `IO::Handle` object, an `IO::Path` object, or a string.
+
 By default, the `backtrace-files` subroutine produces a list of `Pair`s of which the key is the absolute filename, and the value is a list of line numbers of consecutive frames within the same file. Please note that the same filename can occur more than once, if not all calls to code in a file where consecutive in the backtrace.
 
 The following optional named arguments can be specified to include the actual source of the lines as well:
