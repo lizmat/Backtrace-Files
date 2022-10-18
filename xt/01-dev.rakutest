@@ -1,0 +1,146 @@
+use Test;
+use Backtrace::Files;
+
+plan 5;
+
+my $A := q:to/BACKTRACE/;
+Died
+  in block <unit> at -e line 1
+BACKTRACE
+
+my $B := q:to/BACKTRACE/;
+  in block  at /Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30 (rak) line 841
+  in sub eagerSlip at /Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30 (rak) line 28
+  in block  at /Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30 (rak) line 1268
+  in sub show-results at /Users/liz/Github/rakudo/install/share/perl6/site/sources/1636BBF2572059F76159DF50C03D5DD52979E294 (App::Rak) line 743
+  in sub rak-results at /Users/liz/Github/rakudo/install/share/perl6/site/sources/1636BBF2572059F76159DF50C03D5DD52979E294 (App::Rak) line 627
+  in sub action-per-line at /Users/liz/Github/rakudo/install/share/perl6/site/sources/1636BBF2572059F76159DF50C03D5DD52979E294 (App::Rak) line 2702
+  in sub main at /Users/liz/Github/rakudo/install/share/perl6/site/sources/1636BBF2572059F76159DF50C03D5DD52979E294 (App::Rak) line 413
+  in block <unit> at /Users/liz/Github/rakudo/install/share/perl6/site/resources/A0BA54D3D8B6443A1DA0C68A01CA42A3FC242435 line 3
+  in sub MAIN at /Users/liz/Github/rakudo/install/share/perl6/site/bin/rak line 3
+  in block <unit> at /Users/liz/Github/rakudo/install/share/perl6/site/bin/rak line 1
+BACKTRACE
+
+my $C := q:to/BACKTRACE/;
+   at SETTING::src/core.c/Exception.pm6:64  (/Users/liz/Github/rakudo/install/share/perl6/runtime/CORE.c.setting.moarvm:throw)
+ from SETTING::src/core.c/control.pm6:255  (/Users/liz/Github/rakudo/install/share/perl6/runtime/CORE.c.setting.moarvm:die)
+ from <unknown>:1  (<ephemeral file>:)
+ from site#sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30 (rak):841  (/Users/liz/Github/rakudo/install/share/perl6/site/precomp/6EEA8ABB6775C3085F16C7C5F0F7E0BBE48DB1E6/5A/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30:)
+ from SETTING::src/core.c/Any-iterable-methods.pm6:368  (/Users/liz/Github/rakudo/install/share/perl6/runtime/CORE.c.setting.moarvm:push-all)
+ from site#sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30 (rak):28  (/Users/liz/Github/rakudo/install/share/perl6/site/precomp/6EEA8ABB6775C3085F16C7C5F0F7E0BBE48DB1E6/5A/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30:eagerSlip)
+ from site#sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30 (rak):1268  (/Users/liz/Github/rakudo/install/share/perl6/site/precomp/6EEA8ABB6775C3085F16C7C5F0F7E0BBE48DB1E6/5A/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30:)
+ from SETTING::src/core.c/Any-iterable-methods.pm6:335  (/Users/liz/Github/rakudo/install/share/perl6/runtime/CORE.c.setting.moarvm:pull-one)
+ from /Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod (App::Rak):743  (/Users/liz/Github/RAKU/App-Rak/.precomp/6EEA8ABB6775C3085F16C7C5F0F7E0BBE48DB1E6/B7/B792DB7F6ED86D818B0B15923FBDBEB4AD68760E:show-results)
+ from /Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod (App::Rak):627  (/Users/liz/Github/RAKU/App-Rak/.precomp/6EEA8ABB6775C3085F16C7C5F0F7E0BBE48DB1E6/B7/B792DB7F6ED86D818B0B15923FBDBEB4AD68760E:rak-results)
+ from /Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod (App::Rak):2702  (/Users/liz/Github/RAKU/App-Rak/.precomp/6EEA8ABB6775C3085F16C7C5F0F7E0BBE48DB1E6/B7/B792DB7F6ED86D818B0B15923FBDBEB4AD68760E:action-per-line)
+ from /Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod (App::Rak):413  (/Users/liz/Github/RAKU/App-Rak/.precomp/6EEA8ABB6775C3085F16C7C5F0F7E0BBE48DB1E6/B7/B792DB7F6ED86D818B0B15923FBDBEB4AD68760E:main)
+ from bin/rak:3  (<ephemeral file>:<unit>)
+ from bin/rak:1  (<ephemeral file>:<unit-outer>)
+ from gen/moar/stage2/NQPHLL.nqp:1949  (/Users/liz/Github/rakudo/install/share/nqp/lib/NQPHLL.moarvm:eval)
+ from gen/moar/stage2/NQPHLL.nqp:2154  (/Users/liz/Github/rakudo/install/share/nqp/lib/NQPHLL.moarvm:evalfiles)
+ from gen/moar/stage2/NQPHLL.nqp:2114  (/Users/liz/Github/rakudo/install/share/nqp/lib/NQPHLL.moarvm:command_eval)
+ from gen/moar/Compiler.nqp:105  (/Users/liz/Github/rakudo/install/share/perl6/lib/Perl6/Compiler.moarvm:command_eval)
+ from gen/moar/stage2/NQPHLL.nqp:2039  (/Users/liz/Github/rakudo/install/share/nqp/lib/NQPHLL.moarvm:command_line)
+ from gen/moar/rakudo.nqp:140  (/Users/liz/Github/rakudo/install/share/perl6/runtime/perl6.moarvm:MAIN)
+ from gen/moar/rakudo.nqp:1  (/Users/liz/Github/rakudo/install/share/perl6/runtime/perl6.moarvm:<mainline>)
+BACKTRACE
+
+my $D := q:to/BACKTRACE/;
+  in block  at /Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30 (rak) line 841
+  in sub eagerSlip at /Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30 (rak) line 28
+  in block  at /Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30 (rak) line 1268
+  in sub show-results at /Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod (App::Rak) line 743
+  in sub rak-results at /Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod (App::Rak) line 627
+  in sub action-per-line at /Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod (App::Rak) line 2702
+  in sub main at /Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod (App::Rak) line 413
+  in block <unit> at bin/rak line 3
+BACKTRACE
+
+$*SPEC = IO::Spec::Unix;  # force Unix dir sep for tests
+
+is-deeply backtrace-files($A), (), 'did -e backtrace parse ok';
+
+is-deeply backtrace-files($B), (
+  "/Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30"
+    => array[int].new(841, 28, 1268),
+  "/Users/liz/Github/rakudo/install/share/perl6/site/sources/1636BBF2572059F76159DF50C03D5DD52979E294"
+    => array[int].new(743, 627, 2702, 413),
+  "/Users/liz/Github/rakudo/install/share/perl6/site/resources/A0BA54D3D8B6443A1DA0C68A01CA42A3FC242435"
+    => array[int].new(3),
+  "/Users/liz/Github/rakudo/install/share/perl6/site/bin/rak" => array[int].new(3, 1)
+), 'did normal backtrace parse ok';
+
+is-deeply backtrace-files($C), (
+  "/Users/liz/Github/rakudo/src/core.c/Exception.pm6"
+    => array[int].new(64),
+  "/Users/liz/Github/rakudo/src/core.c/control.pm6"
+    => array[int].new(255),
+  "/Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30"
+    => array[int].new(841),
+  "/Users/liz/Github/rakudo/src/core.c/Any-iterable-methods.pm6"
+    => array[int].new(368),
+  "/Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30"
+    => array[int].new(28, 1268),
+  "/Users/liz/Github/rakudo/src/core.c/Any-iterable-methods.pm6"
+    => array[int].new(335),
+  "/Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod"
+    => array[int].new(743, 627, 2702, 413),
+  "bin/rak"
+    => array[int].new(3, 1),
+  "/Users/liz/Github/rakudo/nqp/gen/moar/stage2/NQPHLL.nqp"
+    => array[int].new(1949, 2154, 2114),
+  "/Users/liz/Github/rakudo/gen/moar/Compiler.nqp"
+    => array[int].new(105),
+  "/Users/liz/Github/rakudo/nqp/gen/moar/stage2/NQPHLL.nqp"
+    => array[int].new(2039),
+  "/Users/liz/Github/rakudo/gen/moar/rakudo.nqp"
+    => array[int].new(140, 1)
+), 'did extended backtrace parse ok';
+
+is-deeply backtrace-files($D, :source), (
+  "/Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30"
+    => ( 841 => "             my \$result := matcher(\$item.value);",
+          28 => "    \$seq.iterator.push-all(my \$buffer := IterationBuffer.new);",
+        1268 => "            Pair.new: \$*SOURCE, eagerSlip producer(\$*SOURCE).map: runner"
+       ),
+  "/Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod"
+    => ( 743 => "    RESULT:",
+         627 => "    \$output-dir ?? output-dir-results() !! show-results();",
+        2702 => "    rak-results;",
+         413 => "    \$action-for ?? ::(\"\&action-\$action-for\")() !! action-per-line();"
+       ),
+  "bin/rak"
+    => (3 => "",)
+), 'did backtrace with source parse ok';
+
+is-deeply backtrace-files($D, :source, :context(1)), (
+  "/Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30"
+    => ( 840 => "      ?? -> \$item \{",
+         841 => "             my \$result := matcher(\$item.value);",
+         842 => "             not-acceptable(\$result)",
+          27 => "my sub eagerSlip(\$seq) \{",
+          28 => "    \$seq.iterator.push-all(my \$buffer := IterationBuffer.new);",
+          29 => "    \$buffer.Slip",
+        1267 => "            ++⚛\$nr-sources;",
+        1268 => "            Pair.new: \$*SOURCE, eagerSlip producer(\$*SOURCE).map: runner",
+        1269 => "        }"
+       ),
+  "/Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod"
+    => ( 742 => "    my int \$seen;",
+         743 => "    RESULT:",
+         744 => "    for \$rak.result -> \$outer \{",
+         626 => "my sub rak-results(--> Nil) \{",
+         627 => "    \$output-dir ?? output-dir-results() !! show-results();",
+         628 => "}",
+        2701 => "    run-rak;",
+        2702 => "    rak-results;",
+        2703 => "    rak-stats;",
+         412 => "    # Perform the actual action",
+         413 => "    \$action-for ?? ::(\"\&action-\$action-for\")() !! action-per-line();",
+         414 => "    \$*OUT.close if \$pager;"
+       ),
+  "bin/rak"
+    => (3 => "",)
+), 'did backtrace with source and context parse ok';
+
+# vim: expandtab shiftwidth=4

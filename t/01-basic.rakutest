@@ -1,0 +1,8 @@
+use Test;
+use Backtrace::Files;
+
+plan 1;
+
+ok &backtrace-files, 'did the sub get exported';
+
+# vim: expandtab shiftwidth=4
