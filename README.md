@@ -12,12 +12,16 @@ SYNOPSIS
 use Backtrace::Files;
 
 .say for backtrace-files($backtrace, :context(2));
+
+say normalize-backtrace-filename("SETTING::src/core.c/Cool.rakumod");
 ```
 
 DESCRIPTION
 ===========
 
-Backtrace::Files attempts to provide an abstract interface to the files in which an execution error occurred. It exports a single subroutine `backtrace-files`, which produces a list of filename and lines.
+Backtrace::Files attempts to provide an abstract interface to the files in which an execution error occurred. It exports a subroutine `backtrace-files` which produces a list of filename and lines.
+
+And it exports a subroutine `normalize-backtrace-filename` which normalizes any special filenames (such as the ones prefixed with "SETTING::" to indicate a core subroutine) to actually point at an actual file.
 
 EXPORTED SUBROUTINES
 ====================
@@ -70,6 +74,17 @@ Indicates the actual type that should be used to create `Pair`s of line number a
 ### :added-context(Type)
 
 Indicates the actual type that should be used to create `Pair`s of line number and actual source for lines that actually occurred in the backtrace. Only makes sense if `:source` has been specified with a true value. Defaults to `Pair`.
+
+normalize-backtrace-filename
+----------------------------
+
+```raku
+say normalize-backtrace-filename("SETTING::src/core.c/Cool.rakumod");
+```
+
+The `normalize-backtrace-filename` subroutine is a utility subroutine that accepts a string consisting of a filename from a backtrace, and converts this to an actual filename if the file mentioned was a conceptual filename or a filename known to have missing information.
+
+It is intended for situations where e.g. a `CATCH` block would look at the backtrace to produce a list of actual filenames.
 
 AUTHOR
 ======

@@ -2,5 +2,8 @@ Revision history for Backtrace-Files
 
 {{$NEXT}}
 
+0.0.2  2022-11-08T07:53:37+01:00
+    - Add support for "normalize-backtrace-filename"
+
 0.0.1  2022-10-18T17:44:47+02:00
     - Initial version

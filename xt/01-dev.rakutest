@@ -124,15 +124,9 @@ is-deeply normalize(backtrace-files($D, :source)), (
 
 is-deeply normalize(backtrace-files($D, :source, :context(1))), (
   "/Users/liz/Github/rakudo/install/share/perl6/site/sources/5AA5D72E5A37CC8D5626188CB2C38B49D44C6B30"
-    => ( 840 => "Line 840",
-         841 => "Line 841",
-         842 => "Line 842",
-          27 => "Line 27",
+    => ( 841 => "Line 841",
           28 => "Line 28",
-          29 => "Line 29",
-        1267 => "Line 1267",
-        1268 => "Line 1268",
-        1269 => "Line 1269"
+        1268 => "Line 1268"
        ),
   "/Users/liz/Github/RAKU/App-Rak/lib/App/Rak.rakumod"
     => ( 742 => "Line 742",

@@ -1,7 +1,20 @@
 # some global variables
 my $dir-sep        := $*SPEC.dir-sep;
 my $setting-source := $*EXECUTABLE.parent(3).absolute ~ $dir-sep;
+my $nqp-source     := $setting-source ~ 'nqp' ~ $dir-sep;
 my %repo-paths;
+
+my sub normalize-backtrace-filename(Str:D $_) is export {
+    .subst('SETTING::',$setting-source)
+    .subst(/^ \w+ '#' /, {
+        my str $name = $/.Str.chop;
+        %repo-paths{$name} //=
+          CompUnit::RepositoryRegistry.repository-for-name($name).prefix
+          ~ $dir-sep;
+    })
+    .subst(/^ )> 'gen/moar/stage' /, $nqp-source)
+    .subst(/^ )> 'gen' /, $setting-source)
+}
 
 my proto sub backtrace-files(|) is export {*}
 my multi sub backtrace-files(IO::Handle:D $handle, *%_) {
@@ -27,16 +40,7 @@ my multi sub backtrace-files(
 
     # logic to add a frame from a backtrace to the result
     my sub add(str $string, Int() $linenr) {
-        my $filename = $string
-          .subst(/^ \w+ '#' /, {
-              my str $name = $/.Str.chop;
-              %repo-paths{$name} //=
-                CompUnit::RepositoryRegistry.repository-for-name($name).prefix
-                  ~ $dir-sep;
-          })
-          .subst(/^ )> 'gen/moar/stage' /, $setting-source ~ 'nqp' ~ $dir-sep)
-          .subst(/^ )> 'gen' /, $setting-source)
-        ;
+        my $filename = normalize-backtrace-filename($string);
         if $filename.starts-with('<' | '-') {
             # no action, not a real file
         }
@@ -51,9 +55,7 @@ my multi sub backtrace-files(
     }
 
     # Determine the file / line numbers
-    for $backtrace.lines {
-        my $line := .subst('SETTING::',$setting-source);
-
+    for $backtrace.lines -> $line {
         if $line.starts-with('  in ') {
             my str @words  = $line.words;
             my int $linenr = @words.pop.Int;             # line nr
@@ -62,7 +64,13 @@ my multi sub backtrace-files(
             add @words.pop, $linenr;
         }
         elsif $line.starts-with('   at ') {
-            add |$line.words[1].split(':', 2);
+            if $line.contains('SETTING::') {
+                my ($setting, $, $file, $linenr) = $line.words[1].split(':', 4);
+                add $setting ~ '::' ~$file, $linenr;
+            }
+            else {
+                add |$line.words[1].split(':', 2);
+            }
         }
         elsif $line.starts-with(' from ') {
             my ($before, Int() $linenr) = $line.split(/ ":" <( \d+ /, :v, 2);
@@ -143,13 +151,20 @@ use Backtrace::Files;
 
 .say for backtrace-files($backtrace, :context(2));
 
+say normalize-backtrace-filename("SETTING::src/core.c/Cool.rakumod");
+
 =end code
 
 =head1 DESCRIPTION
 
 Backtrace::Files attempts to provide an abstract interface to the files
-in which an execution error occurred.  It exports a single subroutine
-C<backtrace-files>, which produces a list of filename and lines.
+in which an execution error occurred.  It exports a subroutine
+C<backtrace-files> which produces a list of filename and lines.
+
+And it exports a subroutine C<normalize-backtrace-filename> which
+normalizes any special filenames (such as the ones prefixed with
+"SETTING::" to indicate a core subroutine) to actually point at
+an actual file.
 
 =head1 EXPORTED SUBROUTINES
 
@@ -234,6 +249,22 @@ Indicates the actual type that should be used to create C<Pair>s of
 line number and actual source for lines that actually occurred in the
 backtrace.  Only makes sense if C<:source> has been specified with a
 true value.  Defaults to C<Pair>.
+
+=head2 normalize-backtrace-filename
+
+=begin code :lang<raku>
+
+say normalize-backtrace-filename("SETTING::src/core.c/Cool.rakumod");
+
+=end code
+
+The C<normalize-backtrace-filename> subroutine is a utility subroutine
+that accepts a string consisting of a filename from a backtrace, and
+converts this to an actual filename if the file mentioned was a
+conceptual filename or a filename known to have missing information.
+
+It is intended for situations where e.g. a C<CATCH> block would
+look at the backtrace to produce a list of actual filenames.
 
 =head1 AUTHOR
 
