@@ -1,0 +1,29 @@
+use Test;
+
+my constant @subs = <
+  backtrace-files normalize-backtrace-filename add-source-lines
+>;
+
+plan @subs + 2;
+
+my $code;
+for @subs {
+    $code ~= qq:!c:to/CODE/;
+    {
+        use Backtrace::Files '$_';
+        ok MY::<&$_>:exists, "Did '$_' get exported?";
+    }
+    CODE
+}
+
+$code ~= qq:!c:to/CODE/;
+{
+    use Backtrace::Files <backtrace-files:btf>;
+    ok MY::<&btf>:exists, "Did 'alive' get exported?";
+    is MY::<&btf>.name, 'backtrace-files', 'Was the original name ok?';
+}
+CODE
+
+$code.EVAL;
+
+# vim: expandtab shiftwidth=4

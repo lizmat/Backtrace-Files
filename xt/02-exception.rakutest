@@ -1,0 +1,20 @@
+use Test;
+use Backtrace::Files 'backtrace-files:btf';
+
+sub a() { b }
+sub b() { c }
+sub c() { die }
+
+plan 1;
+
+{
+    CATCH {
+        is-deeply btf($_).skip(2),
+        ("xt/02-exception.rakutest" => array[int].new(6, 5, 4, 17, 8),),
+        'live backtrace ok';
+        .resume;
+    }
+    a;  # throws exception
+}
+
+# vim: expandtab shiftwidth=4

@@ -1,0 +1,29 @@
+use Test;
+use Backtrace::Files 'add-source-lines:asl';
+
+my $filename := $*PROGRAM.relative;
+my @lines = "", |$*PROGRAM.lines;
+my sub s($elems) { $elems == 1 ?? "" !! "s" }
+
+my proto sub test-asl(|) is test-assertion {*}
+my multi sub test-asl($line-nr, |c) {
+    test-asl ($line-nr,), |c
+}
+my multi sub test-asl(@line-nrs, @expected, *%_) {
+    is-deeply
+      asl($filename, @line-nrs, |%_),
+      ($filename => @expected.map({ $_ => @lines[$_] }).List,),
+      "line&s(@line-nrs) @line-nrs.join(',') with %_.raku()";
+}
+
+plan 7;
+
+test-asl 2, (2,);
+test-asl (2,5), (2,5);
+test-asl (1,8), (1,2,3,6,7,8,9,10), :context(2);
+test-asl (1,8), (1,6,7,8), :before-context(2);
+test-asl (1,29), (1,2,3,29), :after-context(2);
+test-asl (1,8), (1,2,6,7,8,9), :before-context(2), :after-context(1);
+test-asl (1,29), (1,2,3,28,29), :before-context(1), :after-context(2);
+
+# vim: expandtab shiftwidth=4

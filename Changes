@@ -1,6 +1,10 @@
 Revision history for Backtrace-Files
 
 {{$NEXT}}
+    - Fix issue with not showing last line in a file when providing
+      source and/or context
+    - Also export "add-source-lines" helper sub
+    - Allow for selective import and renaming of imports
 
 0.0.2  2022-11-08T07:53:37+01:00
     - Add support for "normalize-backtrace-filename"

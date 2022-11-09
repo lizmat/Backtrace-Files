@@ -1,9 +1,10 @@
 use Test;
 use Backtrace::Files;
 
-plan 2;
+my @subs = <backtrace-files normalize-backtrace-filename add-source-lines>;
 
-ok &backtrace-files,              'backtrace-files export';
-ok &normalize-backtrace-filename, 'normalize-backtrace-filename export';
+plan +@subs;
+
+ok ::('&' ~ $_), "$_ exported ok" for @subs;
 
 # vim: expandtab shiftwidth=4

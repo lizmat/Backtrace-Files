@@ -4,7 +4,7 @@ my $setting-source := $*EXECUTABLE.parent(3).absolute ~ $dir-sep;
 my $nqp-source     := $setting-source ~ 'nqp' ~ $dir-sep;
 my %repo-paths;
 
-my sub normalize-backtrace-filename(Str:D $_) is export {
+my sub normalize-backtrace-filename(Str:D $_) {
     .subst('SETTING::',$setting-source)
     .subst(/^ \w+ '#' /, {
         my str $name = $/.Str.chop;
@@ -16,7 +16,73 @@ my sub normalize-backtrace-filename(Str:D $_) is export {
     .subst(/^ )> 'gen' /, $setting-source)
 }
 
-my proto sub backtrace-files(|) is export {*}
+my proto sub add-source-lines(|) {*}
+my multi sub add-source-lines($file, @lines, *%_) {
+    add-source-lines [Pair.new: $file, @lines], |%_
+}
+my multi sub add-source-lines(Pair:D $file-lines, *%_) {
+    add-source-lines [$file-lines], |%_
+}
+my multi sub add-source-lines(
+        @file-lines,
+  Int  :$context        = 0,
+  Int  :$before-context = $context,
+  Int  :$after-context  = $context,
+  Pair :$in-backtrace,
+  Pair :$added-context,
+--> Seq:D) {
+
+    # provide a cached Seq for a given filename
+    my %path-lines;
+    sub path-lines($filename) {
+        %path-lines{$filename}:exists
+          ?? %path-lines{$filename}
+          !! (%path-lines{$filename} := try $filename.IO.lines)
+    }
+
+    # need context
+    if $before-context || $after-context {
+        @file-lines.map: -> (:key($filename), :value(@linenrs)) {
+            my $context-lines := IterationBuffer.CREATE;
+            with path-lines($filename) -> @lines {
+                my $last := @lines.elems;
+
+                for @linenrs -> $linenr {
+                    $context-lines.push(
+                      ($_ == $linenr
+                        ?? $in-backtrace
+                        !! $added-context
+                      ).new: $_, @lines[$_ - 1]
+                    ) for ($linenr - $before-context max 1)
+                       .. ($linenr + $after-context  min $last);
+                }
+                Pair.new: $filename, $context-lines.List
+            }
+
+            # could not read lines, no sense in providing context
+            else {
+                Pair.new:
+                  $filename,
+                  @linenrs.map({$in-backtrace.new: $_, ""}).List
+            }
+        }
+    }
+
+    # no context needed
+    else {
+        @file-lines.map: {
+            my $filename := .key;
+            my $lines := %path-lines{$filename} //
+              (%path-lines{$filename} := try $filename.IO.lines);
+            $_ = Pair.new: .key, .value.map({
+                                     # .lines is zero based
+                $in-backtrace.new: $_, $lines[$_ - 1] // ""
+            }).List;
+        }
+    }
+}
+
+my proto sub backtrace-files(|) {*}
 my multi sub backtrace-files(IO::Handle:D $handle, *%_) {
     backtrace-files($handle.slurp(:close), |%_)
 }
@@ -24,14 +90,14 @@ my multi sub backtrace-files(IO::Path:D $io, *%_) {
     backtrace-files($io.slurp, |%_)
 }
 my multi sub backtrace-files(
-  Str:D $backtrace,
+        $exception,
   Bool :$source,
   Int  :$context        = 0,
   Int  :$before-context = $context,
   Int  :$after-context  = $context,
   Pair :$in-backtrace,
   Pair :$added-context,
---> Seq:D) is export {
+--> Seq:D) {
 
     # some record keeping vars
     my str $lastfile = "";
@@ -54,87 +120,60 @@ my multi sub backtrace-files(
         }
     }
 
-    # Determine the file / line numbers
-    for $backtrace.lines -> $line {
-        if $line.starts-with('  in ') {
-            my str @words  = $line.words;
-            my int $linenr = @words.pop.Int;             # line nr
-            @words.pop;                                  # "line"
-            @words.pop if @words.tail.starts-with('(');  # (module)
-            add @words.pop, $linenr;
-        }
-        elsif $line.starts-with('   at ') {
-            if $line.contains('SETTING::') {
-                my ($setting, $, $file, $linenr) = $line.words[1].split(':', 4);
-                add $setting ~ '::' ~$file, $linenr;
+    # Use a live Exception object's backtrace
+    if Exception.ACCEPTS($exception) {
+        add .file, .line for $exception.backtrace;
+    }
+
+    # Determine the file / line numbers from stacktrace
+    else {
+        for $exception.lines -> $line {
+            if $line.starts-with('  in ') {
+                my str @words  = $line.words;
+                my int $linenr = @words.pop.Int;             # line nr
+                @words.pop;                                  # "line"
+                @words.pop if @words.tail.starts-with('(');  # (module)
+                add @words.pop, $linenr;
             }
-            else {
-                add |$line.words[1].split(':', 2);
+            elsif $line.starts-with('   at ') {
+                if $line.contains('SETTING::') {
+                    my ($setting, $, $file, $linenr) = $line.words[1].split(':', 4);
+                    add $setting ~ '::' ~$file, $linenr;
+                }
+                else {
+                    add |$line.words[1].split(':', 2);
+                }
             }
-        }
-        elsif $line.starts-with(' from ') {
-            my ($before, Int() $linenr) = $line.split(/ ":" <( \d+ /, :v, 2);
-            add $before.words.skip.head, $linenr;
+            elsif $line.starts-with(' from ') {
+                my ($before, Int() $linenr) = $line.split(/ ":" <( \d+ /, :v, 2);
+                add $before.words.skip.head, $linenr;
+            }
         }
     }
     @file-lines.push: Pair.new: $lastfile, @lines if @lines;
 
-    if $source {
+    $source
+      ?? add-source-lines(@file-lines,
+           :$before-context, :$after-context, :$in-backtrace, :$added-context)
+      !! @file-lines.Seq
+}
 
-        # provide a cached Seq for a given filename
-        my %path-lines;
-        sub path-lines($filename) {
-            %path-lines{$filename}:exists
-              ?? %path-lines{$filename}
-              !! (%path-lines{$filename} := try $filename.IO.lines)
-        }
-
-        # need context
-        if $before-context || $after-context {
-            @file-lines.map: -> (:key($filename), :value(@linenrs)) {
-                my $context-lines := IterationBuffer.CREATE;
-                with path-lines($filename) -> @lines {
-                    my $end := @lines.end;
-
-                    for @linenrs -> $linenr {
-                        $context-lines.push(
-                          ($_ == $linenr
-                            ?? $in-backtrace
-                            !! $added-context
-                          ).new: $_, @lines[$_ - 1]
-                        ) for ($linenr - $before-context max 1)
-                           .. ($linenr + $after-context  min $end);
-                    }
-                    Pair.new: $filename, $context-lines.List
-                }
-
-                # could not read lines, no sense in providing context
-                else {
-                    Pair.new:
-                      $filename,
-                      @linenrs.map({$in-backtrace.new: $_, ""}).List
-                }
-            }
-        }
-
-        # no context needed
-        else {
-            @file-lines.map: {
-                my $filename := .key;
-                my $lines := %path-lines{$filename} //
-                  (%path-lines{$filename} := try $filename.IO.lines);
-                $_ = Pair.new: .key, .value.map({
-                                         # .lines is zero based
-                    $in-backtrace.new: $_, $lines[$_ - 1] // ""
-                }).List;
-            }
-        }
-    }
-
-    # don't want the actual source, just the line numbers
-    else {
-        @file-lines.Seq
-    }
+my sub EXPORT(*@names) {
+    Map.new: @names
+      ?? @names.map: {
+             if UNIT::{"&$_"}:exists {
+                 UNIT::{"&$_"}:p
+             }
+             else {
+                 my ($in,$out) = .split(':', 2);
+                 if $out && UNIT::{"&$in"} -> &code {
+                     Pair.new: "&$out", &code
+                 }
+             }
+         }
+      !! UNIT::.grep: {
+             .key.starts-with('&') && .key ne '&EXPORT'
+         }
 }
 
 =begin pod
@@ -153,18 +192,51 @@ use Backtrace::Files;
 
 say normalize-backtrace-filename("SETTING::src/core.c/Cool.rakumod");
 
+.say for add-source-lines(@backtrace);
+
 =end code
 
 =head1 DESCRIPTION
 
-Backtrace::Files attempts to provide an abstract interface to the files
-in which an execution error occurred.  It exports a subroutine
-C<backtrace-files> which produces a list of filename and lines.
+Backtrace::Files attempts to provide an abstract interface to backtraces
+and the files and line numbers in those backtraces, with the
+C<backtrace-files> subroutine.  Backtraces can be given as a string, or
+as an C<Exception> object.
 
-And it exports a subroutine C<normalize-backtrace-filename> which
-normalizes any special filenames (such as the ones prefixed with
-"SETTING::" to indicate a core subroutine) to actually point at
-an actual file.
+It also provides two helper subroutines: one for normalizing filenames
+to a local system installation (with references to the Rakudo core, and
+references to installed modules) called C<normalize-backtrace-filename>.
+
+And another called C<add-source-lines> that will fetch the source lines
+of a given list of filename / line-numbers pairs, with potential context
+lines added.
+
+=head1 SELECTIVE IMPORTING
+
+=begin code :lang<raku>
+
+use Backtrace::Files <backtrace-files>;  # only export sub backtrace-files
+
+=end code
+
+By default all subroutines are exported.  But you can limit this to
+the functions you actually need by specifying the names in the C<use>
+statement.
+
+To prevent name collisions and/or import any subroutine with a more
+memorable name, one can use the "original-name:known-as" syntax.  A
+semi-colon in a specified string indicates the name by which the subroutine
+is known in this distribution, followed by the name with which it will be
+known in the lexical context in which the C<use> command is executed.
+
+=begin code :lang<raku>
+
+# export "backtrace-files" as "btf"
+use Backtrace::Files <backtrace-files:btf>;
+
+.say for btf($backtrace, :context(2));
+
+=end code
 
 =head1 EXPORTED SUBROUTINES
 
@@ -190,7 +262,7 @@ for backtrace-files($backtrace, :source) -> (:key($file), :value(@lines)) {
 
 The C<backtrace-files> subroutine accepts a single positional argument,
 the source of the backtrace information.  This can either be an
-C<IO::Handle> object, an C<IO::Path> object, or a string.
+C<Exception>, a C<IO::Handle> object, an C<IO::Path> object, or a string.
 
 By default, the C<backtrace-files> subroutine produces a list of C<Pair>s
 of which the key is the absolute filename, and the value is a list of
@@ -265,6 +337,30 @@ conceptual filename or a filename known to have missing information.
 
 It is intended for situations where e.g. a C<CATCH> block would
 look at the backtrace to produce a list of actual filenames.
+
+=head2 add-source-lines
+
+=begin code :lang<raku>
+
+for add-source-lines($file, (10, 20)) -> (:key($file), :value(@pairs)) {
+    say $file;
+    for @pairs -> (:key($linenr), :value($source)) {
+        say "$linenr:$source"
+    }
+}
+
+=end code
+
+The C<add-source-lines> subroutine is a utility subroutine that will
+fetch the source lines indicated by pair(s) of filename and line number
+lists.  It either accepts a filename and a list of line numbers, or a
+C<Pair> consisting of a filename as key and a list of line numbers as
+value, or it accepts a list of C<Pair>s with filename a list of line
+numbers.
+
+It also accepts the C<:context>, C<:before-context>, C<:after-context>,
+C<:in-backtrace> and C<:added-context> named arguments, with the same
+defaults as documented with the C<backtrace-files> subroutine.
 
 =head1 AUTHOR
 
