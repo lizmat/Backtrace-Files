@@ -122,7 +122,7 @@ my multi sub backtrace-files(
 
     # Use a live Exception object's backtrace
     if Exception.ACCEPTS($exception) {
-        add .file, .line for $exception.backtrace;
+        add .file.words.head, .line for $exception.backtrace;
     }
 
     # Determine the file / line numbers from stacktrace

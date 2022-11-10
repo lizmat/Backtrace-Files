@@ -1,6 +1,8 @@
 Revision history for Backtrace-Files
 
 {{$NEXT}}
+
+0.0.3  2022-11-10T13:32:35+01:00
     - Fix issue with not showing last line in a file when providing
       source and/or context
     - Also export "add-source-lines" helper sub
