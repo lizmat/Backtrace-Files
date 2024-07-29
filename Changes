@@ -1,6 +1,9 @@
 Revision history for Backtrace-Files
 
 {{$NEXT}}
+    - Update copyright year
+    - Add separate CI badges for each OS
+    - Add sponsor button
 
 0.0.3  2022-11-10T13:32:35+01:00
     - Fix issue with not showing last line in a file when providing
