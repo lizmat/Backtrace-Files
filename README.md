@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/lizmat/Backtrace-Files/actions/workflows/linux.yml/badge.svg)](https://github.com/lizmat/Backtrace-Files/actions) [![Actions Status](https://github.com/lizmat/Backtrace-Files/actions/workflows/macost.yml/badge.svg)](https://github.com/lizmat/Backtrace-Files/actions) [![Actions Status](https://github.com/lizmat/Backtrace-Files/actions/workflows/windows.yml/badge.svg)](https://github.com/lizmat/Backtrace-Files/actions)
+[![Actions Status](https://github.com/lizmat/Backtrace-Files/actions/workflows/linux.yml/badge.svg)](https://github.com/lizmat/Backtrace-Files/actions) [![Actions Status](https://github.com/lizmat/Backtrace-Files/actions/workflows/macos.yml/badge.svg)](https://github.com/lizmat/Backtrace-Files/actions) [![Actions Status](https://github.com/lizmat/Backtrace-Files/actions/workflows/windows.yml/badge.svg)](https://github.com/lizmat/Backtrace-Files/actions)
 
 NAME
 ====
